@@ -155,4 +155,42 @@ function M.ensure_note_file(note_path)
   end
 end
 
+function M.note_repo_dir_from_path(pathname)
+  pathname = vim.fs.normalize(pathname)
+  local note_root = vim.fs.normalize(config.values.notes_root)
+  if not has_path_prefix(pathname, note_root) then
+    return nil, "path is outside notes_root"
+  end
+
+  local rel = pathname:sub(#note_root + 2)
+  local repo_name = vim.split(rel, "/", { plain = true, trimempty = true })[1]
+  if not repo_name or repo_name == "" then
+    return nil, "repo name not found from note path"
+  end
+
+  return vim.fs.joinpath(note_root, repo_name), nil, repo_name
+end
+
+function M.current_note_repo_dir(bufnr)
+  bufnr = bufnr or 0
+  local name = vim.api.nvim_buf_get_name(bufnr)
+  if M.is_note_path(name) then
+    return M.note_repo_dir_from_path(name)
+  end
+
+  local root = nil
+  if name ~= "" then
+    root = M.get_git_root(name)
+  end
+  if not root then
+    root = M.get_git_root(vim.fn.getcwd())
+  end
+  if not root then
+    return nil, "git root not found for current buffer"
+  end
+
+  local repo_name = vim.fs.basename(root)
+  return vim.fs.joinpath(config.values.notes_root, repo_name), nil, repo_name
+end
+
 return M

@@ -67,4 +67,28 @@ T["is_note_path() rejects sibling prefixes"] = function()
   eq(path.is_note_path(notes_root .. "-other/repo/a.md"), false)
 end
 
+T["current_note_repo_dir() resolves from code and note buffers"] = function()
+  local tmp = helpers.make_temp_dir()
+  local repo = vim.fs.joinpath(tmp, "repo")
+  local source = vim.fs.joinpath(repo, "src", "mod.c")
+  local notes_root = vim.fs.joinpath(tmp, "notes")
+  local note_path = vim.fs.joinpath(notes_root, "repo", "src", "mod.c.md")
+
+  vim.fn.mkdir(vim.fs.dirname(source), "p")
+  helpers.write_file(source, { "int x;" })
+  helpers.write_file(note_path, { "## mod", "" })
+  helpers.git_init(repo)
+
+  helpers.setup_plugin({ notes_root = notes_root })
+  local path = require("navic_note.path")
+
+  vim.cmd("edit " .. vim.fn.fnameescape(source))
+  local from_code = path.current_note_repo_dir(0)
+  eq(from_code, vim.fs.joinpath(notes_root, "repo"))
+
+  vim.cmd("edit " .. vim.fn.fnameescape(note_path))
+  local from_note = path.current_note_repo_dir(0)
+  eq(from_note, vim.fs.joinpath(notes_root, "repo"))
+end
+
 return T

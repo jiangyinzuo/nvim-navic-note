@@ -3,6 +3,7 @@ local jump = require("navic_note.jump")
 local navic_adapter = require("navic_note.navic_adapter")
 local note_parser = require("navic_note.note_parser")
 local path = require("navic_note.path")
+local search = require("navic_note.search")
 
 local M = {}
 
@@ -86,6 +87,14 @@ end
 function M.is_note_buffer(bufnr)
   bufnr = bufnr or 0
   return path.is_note_path(vim.api.nvim_buf_get_name(bufnr))
+end
+
+function M.search_files(bang)
+  search.files(bang)
+end
+
+function M.search_rg(query, bang)
+  search.rg(query, bang)
 end
 
 return M
